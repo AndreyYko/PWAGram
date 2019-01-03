@@ -1,5 +1,5 @@
-const CACHE_STATIC_NAME = 'static-v8'
-const CACHE_DYNAMIC_NAME = 'dynamic-v2'
+const CACHE_STATIC_NAME = 'static-v10'
+const CACHE_DYNAMIC_NAME = 'dynamic-v3'
 
 self.addEventListener('install', e => {
   console.log('[Service Worker] Installing...', e)
@@ -44,24 +44,94 @@ self.addEventListener('activate', e => {
 })
 
 self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request)
-      .then(response => {
-        if (response) return response
-        return fetch(e.request)
-          .then(res => {
-            return caches.open(CACHE_DYNAMIC_NAME)
-              .then(cache => {
-                cache.put(e.request.url, res.clone())
-                return res
-              })
-          })
-          .catch(e => {
-            return caches.open(CACHE_STATIC_NAME)
-              .then(cache => {
-                return cache.match('/offline.html')
-              })
-          })
-      })
-  )
+  const url = 'https://httpbin.org/get'
+  if (e.request.url.indexOf(url) > -1) {
+    e.respondWith(
+      caches.open(CACHE_DYNAMIC_NAME)
+        .then(cache => {
+          return fetch(e.request)
+            .then(res => {
+              cache.put(e.request, res.clone())
+              return res
+            })
+        })
+    )
+  } else {
+    e.respondWith(
+      caches.match(e.request)
+        .then(response => {
+          if (response) return response
+          return fetch(e.request)
+            .then(res => {
+              return caches.open(CACHE_DYNAMIC_NAME)
+                .then(cache => {
+                  cache.put(e.request.url, res.clone())
+                  return res
+                })
+            })
+            .catch(err => {
+              return caches.open(CACHE_STATIC_NAME)
+                .then(cache => {
+                  if (e.request.url.indexOf('/help') > -1) {
+                    return cache.match('/offline.html')
+                  }
+                })
+            })
+        })
+    )
+  }
 })
+
+// self.addEventListener('fetch', e => {
+//   e.respondWith(
+//     caches.match(e.request)
+//       .then(response => {
+//         if (response) return response
+//         return fetch(e.request)
+//           .then(res => {
+//             return caches.open(CACHE_DYNAMIC_NAME)
+//               .then(cache => {
+//                 cache.put(e.request.url, res.clone())
+//                 return res
+//               })
+//           })
+//           .catch(e => {
+//             return caches.open(CACHE_STATIC_NAME)
+//               .then(cache => {
+//                 return cache.match('/offline.html')
+//               })
+//           })
+//       })
+//   )
+// })
+
+// Cache-only
+// self.addEventListener('fetch', e => {
+//   e.respondWith(
+//     caches.match(e.request)
+//   )
+// })
+
+// Network-only
+// self.addEventListener('fetch', e => {
+ //   e.respondWith(
+//     fetch(e.request)
+//   )
+// })
+
+// Network, then cache
+// self.addEventListener('fetch', e => {
+//   e.respondWith(
+//     fetch(e.request)
+//       .then(res => {
+//         return caches.open(CACHE_DYNAMIC_NAME)
+//           .then(cache => {
+//             cache.put(e.request.url, res.clone())
+//             return res
+//           })
+//       })
+//       .catch(e => {
+//         return caches.match(e.request)
+//       })
+//   )
+// })
