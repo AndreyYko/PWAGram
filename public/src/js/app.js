@@ -1,3 +1,8 @@
+// Polyfills to provide promises for old browsers
+if (!window.Promise) {
+  window.Promise = Promise
+}
+
 let deferredPrompt
 
 if ('serviceWorker' in navigator) {
