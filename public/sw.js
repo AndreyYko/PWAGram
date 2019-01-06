@@ -1,5 +1,5 @@
-const CACHE_STATIC_NAME = 'static-v4'
-const CACHE_DYNAMIC_NAME = 'dynamic-v4'
+const CACHE_STATIC_NAME = 'static-v3'
+const CACHE_DYNAMIC_NAME = 'dynamic-v3'
 const STATIC_FILES = [
   '/',
   '/index.html',
@@ -16,6 +16,19 @@ const STATIC_FILES = [
   'https://fonts.googleapis.com/icon?family=Material+Icons',
   'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css'
 ]
+
+function trimCache (cacheName, maxItems) {
+  caches.open(cacheName)
+    .then(cache => {
+      return cache.keys()
+        .then(keys => {
+          if (keys.length > maxItems) {
+            cache.delete(keys[0])
+              .then(() => trimCache(cacheName, maxItems))
+          }
+        })
+    })
+}
 
 self.addEventListener('install', e => {
   console.log('[Service Worker] Installing...', e)
@@ -52,6 +65,7 @@ self.addEventListener('fetch', e => {
         .then(cache => {
           return fetch(e.request)
             .then(res => {
+              // trimCache(CACHE_DYNAMIC_NAME, 3)
               cache.put(e.request, res.clone())
               return res
             })
@@ -68,6 +82,7 @@ self.addEventListener('fetch', e => {
             .then(res => {
               return caches.open(CACHE_DYNAMIC_NAME)
                 .then(cache => {
+                  // trimCache(CACHE_DYNAMIC_NAME, 3)
                   cache.put(e.request.url, res.clone())
                   return res
                 })
