@@ -1,11 +1,15 @@
-const CACHE_STATIC_NAME = 'static-v3'
-const CACHE_DYNAMIC_NAME = 'dynamic-v3'
+importScripts('/src/js/idb.js')
+importScripts('/src/js/utility.js')
+
+const CACHE_STATIC_NAME = 'static-v16'
+const CACHE_DYNAMIC_NAME = 'dynamic-v2'
 const STATIC_FILES = [
   '/',
   '/index.html',
   '/offline.html',
   '/src/js/app.js',
   '/src/js/feed.js',
+  '/src/js/idb.js',
   '/src/js/fetch.js',
   '/src/js/promise.js',
   '/src/js/material.min.js',
@@ -58,17 +62,19 @@ self.addEventListener('activate', e => {
 })
 
 self.addEventListener('fetch', e => {
-  const url = 'https://httpbin.org/get'
+  const url = 'https://pwagram-da146.firebaseio.com/posts'
   if (e.request.url.indexOf(url) > -1) {
     e.respondWith(
-      caches.open(CACHE_DYNAMIC_NAME)
-        .then(cache => {
-          return fetch(e.request)
-            .then(res => {
-              // trimCache(CACHE_DYNAMIC_NAME, 3)
-              cache.put(e.request, res.clone())
-              return res
+      fetch(e.request)
+        .then(res => {
+          const cloneRes = res.clone()
+          cloneRes.json()
+            .then(data => {
+              for (const key in data) {
+                writeData('posts', data[key])
+              }
             })
+          return res
         })
     )
   } else if (STATIC_FILES.includes(e.request.url)) {
