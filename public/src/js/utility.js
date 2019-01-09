@@ -17,8 +17,28 @@ function writeData (storeName, data) {
 function readAllData (storeName) {
   return dbPromise
     .then(db => {
-      const tx = db.transaction(storeName)
+      const tx = db.transaction(storeName, 'readonly')
       const store = tx.objectStore(storeName)
       return store.getAll()
+    })
+}
+
+function clearAllData (storeName) {
+  return dbPromise
+    .then(db => {
+      const tx = db.transaction(storeName, 'readwrite')
+      const store = tx.objectStore(storeName)
+      store.clear()
+      return tx.complete
+    })
+}
+
+function deleteItemFromData (storeName, id) {
+  return dbPromise
+    .then(db => {
+      const tx = db.transaction(storeName, 'readwrite')
+      const store = tx.objectStore(storeName)
+      store.delete(id)
+      return tx.complete
     })
 }

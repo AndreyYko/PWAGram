@@ -1,7 +1,7 @@
 importScripts('/src/js/idb.js')
 importScripts('/src/js/utility.js')
 
-const CACHE_STATIC_NAME = 'static-v16'
+const CACHE_STATIC_NAME = 'static-v18'
 const CACHE_DYNAMIC_NAME = 'dynamic-v2'
 const STATIC_FILES = [
   '/',
@@ -68,7 +68,10 @@ self.addEventListener('fetch', e => {
       fetch(e.request)
         .then(res => {
           const cloneRes = res.clone()
-          cloneRes.json()
+          clearAllData('posts')
+            .then(() => {
+              return cloneRes.json()
+            })
             .then(data => {
               for (const key in data) {
                 writeData('posts', data[key])
