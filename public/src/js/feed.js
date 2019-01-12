@@ -48,23 +48,24 @@ function clearCards () {
   }
 }
 
-function createCard () {
+function createCard (item) {
+  const { image, title, location } = item
   const cardWrapper = document.createElement('div')
   cardWrapper.className = 'shared-moment-card mdl-card mdl-shadow--2dp'
   const cardTitle = document.createElement('div')
   cardTitle.className = 'mdl-card__title'
-  cardTitle.style.backgroundImage = 'url("/src/images/sf-boat.jpg")'
+  cardTitle.style.backgroundImage = `url(${image})`
   cardTitle.style.backgroundSize = 'cover'
   cardTitle.style.height = '180px'
   cardWrapper.appendChild(cardTitle)
   const cardTitleTextElement = document.createElement('h2')
   cardTitleTextElement.style.color = 'black'
   cardTitleTextElement.className = 'mdl-card__title-text'
-  cardTitleTextElement.textContent = 'San Francisco Trip'
+  cardTitleTextElement.textContent = title
   cardTitle.appendChild(cardTitleTextElement)
   const cardSupportingText = document.createElement('div')
   cardSupportingText.className = 'mdl-card__supporting-text'
-  cardSupportingText.textContent = 'In San Francisco'
+  cardSupportingText.textContent = location
   cardSupportingText.style.textAlign = 'center'
   // const cardSaveButton = document.createElement('button')
   // cardSaveButton.textContent = 'Save'
@@ -75,7 +76,14 @@ function createCard () {
   sharedMomentsArea.appendChild(cardWrapper)
 }
 
-const url = 'https://httpbin.org/get'
+function updateUI (data) {
+  clearCards()
+  data.forEach(item => {
+    createCard(item)
+  })
+}
+
+const url = 'https://pwagram-da146.firebaseio.com/posts.json'
 let networkDataReceived = false
 
 fetch(url)
@@ -85,21 +93,24 @@ fetch(url)
   .then(function(data) {
     networkDataReceived = true
     console.log('From web', data)
-    clearCards()
-    createCard()
+    const dataArray = []
+    for (const key in data) {
+      dataArray.push(data[key])
+    }
+    updateUI(dataArray)
+  })
+  .catch(err => {
+    console.log('fetching error')
+    console.dir(err)
   })
 
 
-if ('caches' in window) {
-  caches.match(url)
-    .then(res => {
-      return res.json()
-    })
+if ('indexedDB' in window) {
+  readAllData('posts')
     .then(data => {
-      console.log('From cache', data)
       if (!networkDataReceived) {
-        clearCards()
-        createCard()
+        console.log('From indexedDB', data)
+        updateUI(data)
       }
     })
 }
