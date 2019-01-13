@@ -1,7 +1,7 @@
 importScripts('/src/js/idb.js')
 importScripts('/src/js/utility.js')
 
-const CACHE_STATIC_NAME = 'static-v18'
+const CACHE_STATIC_NAME = 'static-v19'
 const CACHE_DYNAMIC_NAME = 'dynamic-v2'
 const STATIC_FILES = [
   '/',
@@ -162,3 +162,39 @@ self.addEventListener('fetch', e => {
 //       })
 //   )
 // })
+
+self.addEventListener('sync', e => {
+  console.log('[Service Worker] Background syncing', e)
+  if (e.tag === 'sync-new-posts') {
+    console.log('[Service Worker] Syncing new Posts')
+    e.waitUntil(
+      readAllData('sync-posts')
+        .then(data => {
+          for (let post of data) {
+            fetch('https://pwagram-da146.firebaseio.com/posts.json', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({
+                id: post.id,
+                title: post.title,
+                location: post.location,
+                image: 'https://firebasestorage.googleapis.com/v0/b/pwagram-da146.appspot.com/o/san-francisco.jpg?alt=media&token=3ab72862-e880-4abf-93ea-3937581f14d7'
+              })
+            })
+              .then(res => {
+                console.log('Send data', res)
+                if (res.ok) {
+                  deleteItemFromData('sync-posts', post.id)
+                }
+              })
+              .catch(error => {
+                console.log('Error while sending data', error)
+              })
+          }
+        })
+    )
+  }
+})
