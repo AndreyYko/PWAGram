@@ -1,7 +1,7 @@
 importScripts('/src/js/idb.js')
 importScripts('/src/js/utility.js')
 
-const CACHE_STATIC_NAME = 'static-v19'
+const CACHE_STATIC_NAME = 'static-v21'
 const CACHE_DYNAMIC_NAME = 'dynamic-v2'
 const STATIC_FILES = [
   '/',
@@ -186,14 +186,13 @@ self.addEventListener('sync', e => {
             })
               .then(res => {
                 console.log('Send data', res)
-                if (res.ok) {
-                  deleteItemFromData('sync-posts', post.id)
-                }
+                deleteItemFromData('sync-posts', post.id)
               })
               .catch(error => {
                 console.log('Error while sending data', error)
               })
           }
+
         })
     )
   }
