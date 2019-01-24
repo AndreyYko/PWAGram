@@ -197,3 +197,22 @@ self.addEventListener('sync', e => {
     )
   }
 })
+
+self.addEventListener('notificationclick', e => {
+  const notification = e.notification
+  const action = e.action
+
+  console.log(notification)
+
+  if (action === 'confirm') {
+    console.log('Confirm was chosen')
+    notification.close()
+  } else {
+    console.log(action)
+    notification.close()
+  }
+})
+
+self.addEventListener('notificationclose', e => {
+  console.log('Notification was closed', e)
+})
