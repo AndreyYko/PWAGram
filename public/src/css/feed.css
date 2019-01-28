@@ -2,13 +2,33 @@
   z-index: 1001;
   position: fixed;
   width: 100%;
-  min-height: 100vh;
+  min-height: calc(100vh - 70px);
   overflow-y: scroll;
   bottom: 0;
   top: 56px;
   background: white;
   text-align: center;
   display: none;
+}
+
+#create-post video, #create-post canvas {
+  width: 512px;
+  height: 240px;
+  max-width: 100%;
+  display: none;
+  margin: auto;
+}
+
+#create-post #pick-image, #create-post #location-loader {
+  display: none;
+}
+
+#create-post #capture-bth {
+  margin: 10px auto;
+}
+
+.mdl-spinner {
+  margin: auto;
 }
 
 .main-image {
@@ -28,4 +48,8 @@
 .input-section {
   display: block;
   margin: 10px auto;
+}
+
+#close-modal {
+  height: 70px;
 }
