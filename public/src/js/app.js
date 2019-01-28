@@ -19,6 +19,8 @@ window.addEventListener('beforeinstallprompt', e => {
 })
 
 function displayNotification () {
+  // This is way to show notification from sw
+  // But this is another way to show notification from js -> new Notification(title, options)
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.ready
       .then(sw => {
@@ -59,19 +61,39 @@ function configurePushSub () {
     .then(sub => {
       if (!sub) {
         // Create a new subscription
+        // key from web-push lib
+        const vapidPublicKey = 'BD31uob5lB2zQWANQr_4ViqhFmdw7KJmK-WmDGgfHEu4jsQqvU9uDdTlsONYqu0XpyWdy11JOVEia4e44l-oMLE'
+        const convertedVapidPublicKey = urlBase64ToUnit8Array(vapidPublicKey)
         return swreg.pushManager.subscribe({
           userVisibleOnly: true,
-          // Then need to set up private key from wep-push lib, and set up function, but firebase is not working
+          // Below need to set up public key from wep-push lib, and set up function
+          applicationServerKey: convertedVapidPublicKey
         })
+          .then((newSub) => {
+            // Here we received new subscription from device and add it to firebase database
+            // return fetch('https://pwagram-da146.firebaseio.com/subscriptions.json')
+            // With POST and body of JSON.stringify(newSub)
+            // then need to subscribe in sw on push event and call push notification when in triggered
+            return fetch('https://pwagram-da146.firebaseio.com/subscriptions.json', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify(newSub)
+            })
+          })
+          .then(res => {
+            if (res.ok) {
+              displayNotification()
+            }
+          })
+          .catch(error => {
+            console.log(error)
+          })
       } else {
         // We have a subscription
       }
-    })
-    .then((newSub) => {
-      // Here we received new subscription from device and add it to firebase database
-      // return fetch('https://pwagram-da146.firebaseio.com/subscriptions.json')
-      // With POST and body of JSON.stringify(newSub)
-      // then need to subscribe in sw on push event and call push notification when in triggered
     })
 }
 

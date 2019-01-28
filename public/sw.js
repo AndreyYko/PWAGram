@@ -1,14 +1,15 @@
 importScripts('/src/js/idb.js')
 importScripts('/src/js/utility.js')
 
-const CACHE_STATIC_NAME = 'static-v21'
-const CACHE_DYNAMIC_NAME = 'dynamic-v2'
+const CACHE_STATIC_NAME = 'static-v31'
+const CACHE_DYNAMIC_NAME = 'dynamic-v4'
 const STATIC_FILES = [
   '/',
   '/index.html',
   '/offline.html',
   '/src/js/app.js',
   '/src/js/feed.js',
+  '/src/js/utility.js',
   '/src/js/idb.js',
   '/src/js/fetch.js',
   '/src/js/promise.js',
@@ -171,7 +172,13 @@ self.addEventListener('sync', e => {
       readAllData('sync-posts')
         .then(data => {
           for (let post of data) {
-            fetch('https://pwagram-da146.firebaseio.com/posts.json', {
+            // On the backend side need to read form data with some libraries, and upload image
+            // const postData = new FormData()
+            // postData.append('id', post.id)
+            // postData.append('title', post.title)
+            // postData.append('location', post.location)
+            // postData.append('file', post.picture, post.id + '.png')
+            fetch('https://us-central1-pwagram-da146.cloudfunctions.net/storePost', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -185,14 +192,19 @@ self.addEventListener('sync', e => {
               })
             })
               .then(res => {
-                console.log('Send data', res)
-                deleteItemFromData('sync-posts', post.id)
+                console.log('Send data')
+                res.json()
+                  .then(resData => deleteItemFromData('sync-posts', resData.id))
               })
               .catch(error => {
+                window.alert(error)
                 console.log('Error while sending data', error)
               })
           }
 
+        })
+        .catch(error => {
+          console.log(error)
         })
     )
   }
@@ -209,10 +221,43 @@ self.addEventListener('notificationclick', e => {
     notification.close()
   } else {
     console.log(action)
-    notification.close()
+    e.waitUntil(
+      // Find if browser is opened, navigate to out site
+      // In other case, open browser
+      clients.matchAll()
+        .then(clis => {
+          const client = clis.find(c => c.visibilityState === 'visible')
+
+          if (client) {
+            client.navigate('http://localhost:8080')
+            client.focus()
+          } else {
+            client.openWindow('http://localhost:8080')
+          }
+          notification.close()
+        })
+    )
   }
 })
 
 self.addEventListener('notificationclose', e => {
   console.log('Notification was closed', e)
+})
+
+self.addEventListener('push', e => {
+  console.log('[Service Worker] Push notification received', e)
+  // Fallback data if received push notification is empty
+  let data = { title: 'New!', content: 'Something new happened!' }
+  if (e.data) {
+    data = JSON.parse(e.data.text())
+  }
+  const options = {
+    body: data.content,
+    icon: '/src/images/icons/app-icon-96x96.png',
+    badge: '/src/images/icons/app-icon-96x96.png'
+  }
+
+  e.waitUntil(
+    self.registration.showNotification(data.title, options)
+  )
 })
